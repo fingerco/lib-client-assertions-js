@@ -46,6 +46,7 @@
     "webpack-cli": "^4.3.1"
   },
   "dependencies": {
+    "axios": "^0.21.1",
     "simple-post-json": "^0.7.0",
     "uuid": "^8.3.2"
   },

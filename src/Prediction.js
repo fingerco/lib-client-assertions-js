@@ -1,8 +1,16 @@
+import axios from "axios";
+
 class Prediction {
-  constructor(id) {
+  constructor(assertionClient, id, secondsToExist) {
+    this.assertionClient = assertionClient;
     this.id = id;
     this.steps = [];
     this.reportSteps = [];
+    this.stepsTaken = [];
+    this.secondsToExist = secondsToExist;
+    this.startedAt = new Date().toISOString();
+
+    this.preloadData();
   }
 
   addStep(type, name, value) {
@@ -51,6 +59,27 @@ class Prediction {
 
   valueEqual() {
     return "valueEqual";
+  }
+
+  preloadData() {
+    const getExisting = axios.get(
+      `https://assertions-api.chattyops.com/predictions/states/${this.assertionClient.userId}/${this.id}`
+    );
+
+    return getExisting.then((data) => console.log(data));
+  }
+
+  saveState() {
+    const saveState = axios.post(
+      `http://localhost:3000/predictions/states/${this.assertionClient.userId}/${this.id}`,
+      {
+        steps_taken: this.stepsTaken,
+        started_at: this.startedAt,
+        time_to_exist: this.secondsToExist,
+      }
+    );
+
+    return saveState;
   }
 }
 

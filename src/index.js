@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from "uuid";
-import postJSON from "simple-post-json";
+import axios from "axios";
 import Prediction from "./Prediction";
 
 const USER_ID_KEY = "client-assertions-user-id";
@@ -17,17 +17,20 @@ class ClientAssertions {
     if (!value) {
       const currDate = new Date();
 
-      postJSON("https://assertions-api.chattyops.com/assertions/failures", {
-        id: uuidv4(),
-        failed_at: currDate.toISOString(),
-        user_id: this.userId,
-        assertion_name: name,
-      });
+      return axios.post(
+        "https://assertions-api.chattyops.com/assertions/failures",
+        {
+          id: uuidv4(),
+          failed_at: currDate.toISOString(),
+          user_id: this.userId,
+          assertion_name: name,
+        }
+      );
     }
   };
 
-  createPrediction = (id) => {
-    return new Prediction(id);
+  createPrediction = (id, secondsToExist) => {
+    return new Prediction(this, id, secondsToExist);
   };
 }
 

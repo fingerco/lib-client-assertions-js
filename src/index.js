@@ -7,6 +7,9 @@ const USER_ID_KEY = "client-assertions-user-id";
 class ClientAssertions {
   constructor() {
     this.userId = window.localStorage.getItem(USER_ID_KEY);
+    this.predictions = [];
+    this.predictionNextSteps = {};
+
     if (!this.userId) {
       this.userId = uuidv4();
       window.localStorage.setItem(USER_ID_KEY, this.userId);
@@ -15,6 +18,7 @@ class ClientAssertions {
 
   assert = (name, value) => {
     if (!value) {
+      this.predictionEventHappened("assertionFailure", name);
       const currDate = new Date();
 
       return axios.post(
@@ -26,11 +30,30 @@ class ClientAssertions {
           assertion_name: name,
         }
       );
+    } else {
+      this.predictionEventHappened("assertionSuccess", name);
     }
   };
 
   createPrediction = (id, secondsToExist) => {
-    return new Prediction(this, id, secondsToExist);
+    const prediction = new Prediction(this, id, secondsToExist);
+    this.predictions.push(prediction);
+
+    return prediction;
+  };
+
+  preloadPredictions = () => {
+    this.predictions.forEach((pred) => pred.preloadData());
+  };
+
+  predictionNextStep = (prediction, step) => {
+    this.predictionNextSteps[prediction.id] = step;
+  };
+
+  predictionEventHappened = (type, name, value = null) => {
+    Object.values(this.predictionNextSteps).forEach((step) => {
+      step.eventHappened(type, name, value);
+    });
   };
 }
 

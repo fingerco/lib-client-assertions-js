@@ -12,4 +12,8 @@ predict.addStep(predict.valueGreaterThan(), 'absolute', 5)
 predict.addStep(predict.valueLessThan(), 'absolute', 5)
 predict.addStep(predict.valueEqual(), 'absolute', 5).reportOnHit()
 
-assertions.assert('some_odd_thing', false)
+assertions.preloadPredictions()
+
+setTimeout(() => {
+  assertions.assert('some_odd_thing', false)
+}, 1000)

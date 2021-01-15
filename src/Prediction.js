@@ -9,14 +9,14 @@ class Prediction {
     this.stepsTaken = [];
     this.secondsToExist = secondsToExist;
     this.startedAt = new Date().toISOString();
-
-    this.preloadData();
   }
 
-  addStep(type, name, value) {
+  addStep(type, name, value = null) {
     const stepNum = this.steps.length;
     const step = new PredictionStep(this, stepNum, type, name, value);
     this.steps.push(step);
+
+    if (stepNum === 0) this.assertionClient.predictionNextStep(this, step);
 
     return step;
   }
@@ -61,12 +61,40 @@ class Prediction {
     return "valueEqual";
   }
 
+  stepHappened(step) {
+    const currStep = this.steps[step.stepNum];
+    currStep.hit();
+
+    this.stepsTaken.push(this.stepsTaken.length);
+
+    if (step.stepNum < this.steps.length - 1) {
+      const nextStep = this.steps[step.stepNum + 1];
+      this.assertionClient.predictionNextStep(this, nextStep);
+    }
+
+    this.saveState();
+  }
+
   preloadData() {
     const getExisting = axios.get(
       `https://assertions-api.chattyops.com/predictions/states/${this.assertionClient.userId}/${this.id}`
     );
 
-    return getExisting.then((data) => console.log(data));
+    return getExisting.then((resp) => {
+      const data = resp.data;
+      if (data) {
+        this.stepsTaken = data.steps_taken;
+        this.startedAt = data.started_at;
+        this.secondsToExist =
+          (new Date(data.time_to_exist).getTime() - new Date().getTime()) /
+          1000;
+
+        this.assertionClient.predictionNextStep(
+          this,
+          this.steps[this.stepsTaken.length]
+        );
+      }
+    });
   }
 
   saveState() {
@@ -94,6 +122,16 @@ class PredictionStep {
 
   reportOnHit() {
     this.prediction.reportWhenHitStep(this.stepNum);
+  }
+
+  eventHappened(type, name, value) {
+    if (this.type === type && this.name === name && this.value === value) {
+      this.prediction.stepHappened(this);
+    }
+  }
+
+  hit() {
+    console.log("Step Happened:", this.type, this.name, this.value);
   }
 }
 

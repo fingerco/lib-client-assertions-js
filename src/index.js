@@ -1,6 +1,6 @@
-import "./index.css";
 import { v4 as uuidv4 } from "uuid";
 import postJSON from "simple-post-json";
+import Prediction from "./Prediction";
 
 const USER_ID_KEY = "client-assertions-user-id";
 
@@ -24,6 +24,10 @@ class ClientAssertions {
         assertion_name: name,
       });
     }
+  };
+
+  createPrediction = (id) => {
+    return new Prediction(id);
   };
 }
 
